@@ -700,9 +700,8 @@ Example: (get-source-from-var 'filter)"
 (defslimefn buffer-first-change [file-name] nil)
 
 (defn locals-for-emacs [m]
-  (sort-by second
-           (map #(list :name (name (first %)) :id 0
-                       :value (pr-str (second %))) m)))
+  (map-indexed #(list :name (name (first %2)) :id %
+                 :value (pr-str (second %2))) m))
 
 (defslimefn frame-catch-tags-for-emacs [n] nil)
 (defslimefn frame-locals-for-emacs [n]
