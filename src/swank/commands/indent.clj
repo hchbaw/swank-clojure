@@ -49,8 +49,9 @@
        (when (or (= body-position 'defun)
                  (not (neg? body-position)))
          (list (name (:name (meta var)))
-               '.
-               body-position)))))
+               body-position
+               (let [str-ns #(str (:ns (meta %)))]
+                 (seq ((juxt str-ns str-ns) var))))))))
 
 (defn- get-cache-update-for-var
   "Checks whether a given var needs to be updated in a cache. If it

@@ -23,6 +23,7 @@
 (defslimefn connection-info []
   `(:pid ~(sys/get-pid)
          :style :spawn
+         :encoding (:coding-systems ("utf-8-unix"))
          :lisp-implementation (:type "Clojure"
                                      :name "clojure"
                                      :version ~(clojure-version))
@@ -729,7 +730,7 @@ Example: (get-source-from-var 'filter)"
 (defslimefn frame-source-location-for-emacs [n]
   (source-location-for-frame (dbe/get-stack-trace n)))
 
-(defslimefn create-repl [target] '("user" "user"))
+(defslimefn create-repl [target & opts] '("user" "user"))
 
 ;;; Threads
 
