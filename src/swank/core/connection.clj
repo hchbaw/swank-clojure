@@ -1,7 +1,8 @@
 (ns swank.core.connection
   (:use (swank util)
         (swank.util sys)
-        (swank.core protocol))
+        (swank.core protocol)
+        (swank rpc))
   (:import (java.net ServerSocket Socket InetAddress)
            (java.io InputStreamReader OutputStreamWriter)))
 
@@ -41,6 +42,11 @@
         :reader (InputStreamReader. (.getInputStream socket) encoding)
         :writer (OutputStreamWriter. (.getOutputStream socket) encoding)
         :writer-redir (ref nil)
+
+        ;; TODO: above :reader and :reader are not in use
+        ;; TODO: use encoding-map and more
+        :input-stream (.getInputStream socket)
+        :output-stream (.getOutputStream socket)
         
         :indent-cache (ref {})
         :indent-cache-pkg (ref nil)
@@ -56,7 +62,7 @@
      `make-swank-connection'"
   ([] (read-from-connection *current-connection*))
   ([conn]
-     (read-swank-message (conn :reader))))
+     (decode-message (conn :input-stream))))
 
 (defn write-to-connection
   "Writes a single message to a swank-connection.
@@ -65,4 +71,4 @@
     `make-swank-connection'"
   ([msg] (write-to-connection *current-connection* msg))
   ([conn msg]
-     (write-swank-message (conn :writer) msg)))
+     (encode-message (conn :output-stream) msg)))

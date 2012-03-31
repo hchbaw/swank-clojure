@@ -461,8 +461,17 @@ values."
   "A loop that reads from the socket (will block when no message
    available) and dispatches the message to the control thread."
   ([conn control]
-     (with-connection conn
-       (continuously (mb/send control (read-from-connection conn))))))
+     (letfn [(reread-swank-package [[action & args :as form]]
+               (if (= action :emacs-rex)
+                 (let [[[fun & body] & rest] args]
+                   `(~action
+                     (~(symbol (.replaceFirst (str fun) "^swank:" "swank/"))
+                      ~@body)
+                     ~@rest))
+                 form))
+             (read-aux [] (reread-swank-package (read-from-connection conn)))]
+      (with-connection conn
+        (continuously (mb/send control (read-aux)))))))
 
 (defn dispatch-event
   "Dispatches/executes an event in the control thread's mailbox queue."
