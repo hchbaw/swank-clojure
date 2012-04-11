@@ -23,6 +23,7 @@
 (defslimefn connection-info []
   `(:pid ~(sys/get-pid)
          :style :spawn
+         :encoding (:coding-systems ("utf-8-unix"))
          :lisp-implementation (:type "Clojure"
                                      :name "clojure"
                                      :version ~(clojure-version))
@@ -100,14 +101,14 @@
 (defn- apply-macro-expander [expander string]
   (pretty-pr-code (expander (read-string string))))
 
-(defslimefn swank-macroexpand-1 [string]
+(defslimefn swank-expand-1 [string]
   (apply-macro-expander macroexpand-1 string))
 
-(defslimefn swank-macroexpand [string]
+(defslimefn swank-expand [string]
   (apply-macro-expander macroexpand string))
 
 ;; not implemented yet, needs walker
-(defslimefn swank-macroexpand-all [string]
+(defslimefn swank-expand-all [string]
   (apply-macro-expander macroexpand-all string))
 
 ;;;; Compiler / Execution
@@ -729,7 +730,7 @@ Example: (get-source-from-var 'filter)"
 (defslimefn frame-source-location-for-emacs [n]
   (source-location-for-frame (dbe/get-stack-trace n)))
 
-(defslimefn create-repl [target] '("user" "user"))
+(defslimefn create-repl [target & opts] '("user" "user"))
 
 ;;; Threads
 
