@@ -247,7 +247,8 @@
                                 (find-vars parsed-symbol-name
                                            (:ns ns-matching)
                                            (make-duplicate-var-filter
-                                            (filter (partial = ns-matching)
+                                            (filter (partial
+                                                     = (:ns ns-matching))
                                                     found-nss))
                                            true)
                                 ns-matching))]
