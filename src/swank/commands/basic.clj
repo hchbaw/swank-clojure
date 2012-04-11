@@ -101,14 +101,14 @@
 (defn- apply-macro-expander [expander string]
   (pretty-pr-code (expander (read-string string))))
 
-(defslimefn swank-macroexpand-1 [string]
+(defslimefn swank-expand-1 [string]
   (apply-macro-expander macroexpand-1 string))
 
-(defslimefn swank-macroexpand [string]
+(defslimefn swank-expand [string]
   (apply-macro-expander macroexpand string))
 
 ;; not implemented yet, needs walker
-(defslimefn swank-macroexpand-all [string]
+(defslimefn swank-expand-all [string]
   (apply-macro-expander macroexpand-all string))
 
 ;;;; Compiler / Execution
