@@ -4,7 +4,10 @@
   swank.rpc
   (:use (swank util)
         (swank.util io))
-  (:import (java.io Writer Reader PushbackReader StringReader)))
+  (:import (java.io Writer Reader PushbackReader StringReader)
+           (java.nio ByteBuffer)
+           (java.nio.channels Channels)))
+
 
 ;; ERROR HANDLING
 
@@ -65,6 +68,7 @@
               (. Character isDigit c) (Integer/parseInt str)
               (= "nil" str) nil
               (= "t" str) true
+              (.startsWith str ":") (keyword (.substring str 1))
               :else (symbol str))))))))
 
 (defn- read-packet
@@ -85,6 +89,34 @@
 
 ; (with-open [rdr (StringReader. "00001f(swank:a 123 (%b% (t nil) \"c\"))")] (decode-message rdr))
 
+;; TODO: read-packet will be REDEFINED!
+(defn- read-chunk [stream length]
+  (let [buf (ByteBuffer/allocate length)
+        ch (Channels/newChannel stream)]
+    (loop [i 0]
+      (let [n (.read ch buf)]
+        (cond (= (+ i n) length) (returning [bytes
+                                             (make-array Byte/TYPE length)]
+                                   (.clear buf)
+                                   (.get buf bytes))
+              (neg? n) (throw swank-protocol-error)
+              :else (recur (+ i n)))))))
+
+(defn- parse-header [stream]
+  (Integer/valueOf (String. (read-chunk stream 6)) 16))
+
+(defn- read-packet [stream]
+  (let [len (parse-header stream)]
+    (String. (read-chunk stream len) "UTF-8")))
+
+(defn decode-message [stream]
+  (let [packet (read-packet stream)]
+    (log-event "READ %s\n" packet)
+    (try
+      (with-open [rdr (PushbackReader. (StringReader. packet))]
+        (read-form rdr))
+      (catch Exception e
+        (list :read-error packet e)))))
 
 ;; OUTPUT
 
@@ -136,6 +168,19 @@
 
 ; (with-out-str (encode-message *out* "hello"))
 ; (with-out-str (encode-message *out* '(a 123 (swank:b (true false) "c"))))
+
+;; TODO: write-packet will be REDEFINED!
+(defn- write-packet [stream string]
+  (let [len (count (.getBytes string))
+        buf (ByteBuffer/wrap (.getBytes (str (format "%06x" len) string)))
+        ch (Channels/newChannel stream)]
+    (.write ch buf)))
+
+(defn encode-message [stream message]
+  (let [str (with-out-str
+              (write-form *out* message))]
+    (log-event "WRITE: %s\n" str)
+    (write-packet stream str)))
 
 
 ;; DISPATCH
